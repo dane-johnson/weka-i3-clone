@@ -34,7 +34,10 @@
                  (re-seq #"([^%\s]*)\r?\n")
                  (map second)
                  (map #(create-data attributes %))))))
-
+(defn nlgn
+  "Given n, return n*lg(n)"
+  [n]
+  (* n (/ (Math/log n) (Math/log 2))))
 
 (defn -main
   "Reads an arff file into an arff object"
