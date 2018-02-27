@@ -23,7 +23,7 @@
   (->Arff (map create-attribute (re-seq #"@attribute.*" stream))
           (->> (re-find #"@data\r?\n((.*\r?\n)+)" stream)
                 second
-                (re-seq #"(\S*)\r?\n")
+                (re-seq #"([^%\s]*)\r?\n")
                 (map second)
                 (map create-data))))
 
