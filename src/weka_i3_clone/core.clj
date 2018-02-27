@@ -21,18 +21,19 @@
 
 (defn create-data
   "Creates a data vector from a string"
-  [line]
-  (split line #","))
+  [attributes line]
+  (into (hash-map) (map vector (map :id attributes) (split line #","))))
 
 (defn read-arff-file
   "Reads a file into an Arff"
   [stream]
-  (->Arff (map create-attribute (re-seq #"@attribute.*" stream))
-          (->> (re-find #"@data\r?\n((.*\r?\n)+)" stream)
-                second
-                (re-seq #"([^%\s]*)\r?\n")
-                (map second)
-                (map create-data))))
+  (let [attributes (mapv create-attribute (re-seq #"@attribute.*" stream))]
+    (->Arff attributes
+            (->> (re-find #"@data\r?\n((.*\r?\n)+)" stream)
+                 second
+                 (re-seq #"([^%\s]*)\r?\n")
+                 (map second)
+                 (map #(create-data attributes %))))))
 
 
 (defn -main
