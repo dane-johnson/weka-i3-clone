@@ -39,6 +39,44 @@
   [n]
   (* n (/ (Math/log n) (Math/log 2))))
 
+(defn test-attribute
+  "The last attribute is the one we'd like to test for"
+  [^Arff D]
+  (:id (peek (:attributes D))))
+
+(defn info
+  "Calculates the amount of information in the table"
+  [^Arff D]
+  (->> (:data D)
+       (map #(get % (test-attribute D)))
+       frequencies
+       vals
+       (map #(/ % (count (:data D))))
+       (map nlgn)
+       (apply +)
+       -))
+
+(defn d
+  "Finds the number of attributes that hold a given value"
+  [^Arff D attribute value]
+  (->> (:data D)
+       (filter #(= (get % attribute) value))
+       count))
+
+(defn dj
+  "Finds the number of attributes that hold a given value while the test attribute
+  holds a given value"
+  [^Arff D test-value attribute value]
+  (->> (:data D)
+       (filter #(and (= (get % attribute) value)
+                     (= (get % (test-attribute D)) test-value)))
+       (count)))
+
+(defn info-given
+  "Calculates information requirement for a given attribute"
+  [^Arff D attribute]
+  (->> (:data D)))
+
 (defn -main
   "Reads an arff file into an arff object"
   [& args]
