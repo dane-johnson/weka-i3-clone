@@ -5,30 +5,30 @@
   (:require [clojure.string :refer [split]])
   (:gen-class))
 
-;; An Attribute holds an id and values
-(defrecord Attribute [id vals])
 ;; An Arff holds attributes and data
-(defrecord Arff [attributes data])
+(defrecord Arff [attributes test-attribute test-values data])
 
 (defn create-attribute
   "Creates an attribute from a string"
   [line]
-  (->Attribute (second (re-seq #"\w+" line))
-               (->> (re-find #"\{(.*)\}" line)
-                    second
-                    (re-seq #"[^\s,]+")
-                    set)))
+  [(second (re-seq #"\w+" line))
+   (->> (re-find #"\{(.*)\}" line)
+        second
+        (re-seq #"[^\s,]+")
+        set)])
 
 (defn create-data
   "Creates a data vector from a string"
   [attributes line]
-  (into (hash-map) (map vector (map :id attributes) (split line #","))))
+  (into (hash-map) (map vector (map first attributes) (split line #","))))
 
 (defn read-arff-file
   "Reads a file into an Arff"
   [stream]
   (let [attributes (mapv create-attribute (re-seq #"@attribute.*" stream))]
-    (->Arff attributes
+    (->Arff (into {} (pop attributes))
+            (first (peek attributes))
+            (second (peek attributes))
             (->> (re-find #"@data\r?\n((.*\r?\n)+)" stream)
                  second
                  (re-seq #"([^%\s]*)\r?\n")
@@ -41,21 +41,11 @@
     (* n (/ (Math/log n) (Math/log 2)))
     0))
 
-(defn test-attribute
-  "The last attribute is the one we'd like to test for"
-  [^Arff D]
-  (:id (peek (:attributes D))))
-
-(defn test-values
-  "Gets the values of the attribute being tested for"
-  [^Arff D]
-  (:vals (peek (:attributes D))))
-
 (defn info
   "Calculates the amount of information in the table"
   [^Arff D]
   (->> (:data D)
-       (map #(get % (test-attribute D)))
+       (map #(get % (:test-attribute D)))
        frequencies
        vals
        (map #(/ % (count (:data D))))
@@ -76,13 +66,13 @@
   [^Arff D test-value attribute value]
   (->> (:data D)
        (filter #(and (= (get % attribute) value)
-                     (= (get % (test-attribute D)) test-value)))
+                     (= (get % (:test-attribute D)) test-value)))
        (count)))
 
 (defn djoverd*infodj
   [^Arff D attribute value]
   (* (reduce + (map #(nlgn (/ (dj D % attribute value)
-                              (d D attribute value))) (test-values D)))
+                              (d D attribute value))) (:test-values D)))
      (/ (d D attribute value)
         (count (:data D)))
      -1))
