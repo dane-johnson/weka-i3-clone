@@ -77,11 +77,14 @@
         (count (:data D)))
      -1))
 
-;; (defn info-given
-;;   "Calculates information requirement for a given attribute"
-;;   [^Arff D attribute]
-;;   (let [attrs (attribute (:attributes D))]
-;;     (-> (for [attr attrs]))))
+(defn info-given
+  "Calculates information requirement for a given attribute"
+  [^Arff D attribute]
+  (reduce + (map (partial djoverd*infodj D attribute) (get (:attributes D) attribute))))
+
+(defn gain
+  [^Arff D attribute]
+  (- (info D) (info-given D attribute)))
 
 (defn -main
   "Reads an arff file into an arff object"
