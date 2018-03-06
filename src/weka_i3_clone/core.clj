@@ -37,12 +37,19 @@
 (defn nlgn
   "Given n, return n*lg(n)"
   [n]
-  (* n (/ (Math/log n) (Math/log 2))))
+  (if-not (zero? n)
+    (* n (/ (Math/log n) (Math/log 2)))
+    0))
 
 (defn test-attribute
   "The last attribute is the one we'd like to test for"
   [^Arff D]
   (:id (peek (:attributes D))))
+
+(defn test-values
+  "Gets the values of the attribute being tested for"
+  [^Arff D]
+  (:vals (peek (:attributes D))))
 
 (defn info
   "Calculates the amount of information in the table"
@@ -72,10 +79,19 @@
                      (= (get % (test-attribute D)) test-value)))
        (count)))
 
-(defn info-given
-  "Calculates information requirement for a given attribute"
-  [^Arff D attribute]
-  (->> (:data D)))
+(defn djoverd*infodj
+  [^Arff D attribute value]
+  (* (reduce + (map #(nlgn (/ (dj D % attribute value)
+                              (d D attribute value))) (test-values D)))
+     (/ (d D attribute value)
+        (count (:data D)))
+     -1))
+
+;; (defn info-given
+;;   "Calculates information requirement for a given attribute"
+;;   [^Arff D attribute]
+;;   (let [attrs (attribute (:attributes D))]
+;;     (-> (for [attr attrs]))))
 
 (defn -main
   "Reads an arff file into an arff object"
