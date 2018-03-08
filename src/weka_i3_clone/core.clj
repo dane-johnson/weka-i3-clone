@@ -132,5 +132,11 @@
 (defn -main
   "Reads an arff file into an arff object"
   [& args]
-  (-> (read-arff-file (slurp (first args)))
-      (prn)))
+  (let [file (do (print "Please enter name of the data file:\t") (flush) (read-line))
+        D (read-arff-file (slurp file))]
+    (println (str (inc (count (:attributes D))) " attributes"))
+    (println (str (count (:data D)) " examples"))
+    (println) (println)
+    (pprint-i3 (i3 D))
+    (println) (println) (println)
+    (print "Press ENTER to continue:") (flush) (read-line)))
