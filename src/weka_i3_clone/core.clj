@@ -7,6 +7,7 @@
 
 ;; An Arff holds attributes and data
 (defrecord Arff [attributes test-attribute test-values data])
+(defn arff? [x] (instance? Arff x))
 
 (defn create-attribute
   "Creates an attribute from a string"
@@ -85,6 +86,31 @@
 (defn gain
   [^Arff D attribute]
   (- (info D) (info-given D attribute)))
+
+(defn best-identifier
+  [^Arff D]
+  (apply max-key #(gain D (key %)) (:attributes D)))
+
+(defn same-class?
+  [^Arff D]
+  (if (every? #{(get (first (:data D)) (:test-attribute D))}
+              (map #(get % (:test-attribute D)) (:data D)))
+    (get (first (:data D)) (:test-attribute D))
+    false))
+
+(defn partition-on-value
+  [^Arff D attribute value]
+  (-> D
+      (update :attributes dissoc attribute)
+      (update :data (fn [data] (filter #(= (get % attribute) value) data)))
+      (update :data (fn [data] (map #(dissoc % attribute) data)))))
+
+(defn i3
+  [^Arff D]
+  (cond
+    (same-class? D) (same-class? D)
+    :default (let [[best-attribute best-values] (best-identifier D)]
+               (map #(i3 (partition-on-value D best-attribute %)) best-values))))
 
 (defn -main
   "Reads an arff file into an arff object"
