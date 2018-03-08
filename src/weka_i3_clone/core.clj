@@ -87,14 +87,17 @@
   (reduce + (map (partial djoverd*infodj D attribute) (get (:attributes D) attribute))))
 
 (defn gain
+  "Calculates the gain for a given attribute"
   [^Arff D attribute]
   (- (info D) (info-given D attribute)))
 
 (defn best-identifier
+  "Selects the attribute in D with the most gain"
   [^Arff D]
   (apply max-key #(gain D (key %)) (:attributes D)))
 
 (defn same-class?
+  "Tests if all data are in the same class and returns the class, or false if they are not"
   [^Arff D]
   (if (every? #{(get (first (:data D)) (:test-attribute D))}
               (map #(get % (:test-attribute D)) (:data D)))
@@ -102,6 +105,7 @@
     false))
 
 (defn partition-on-value
+  "Splits D into a new partition based on the value of attribute"
   [^Arff D attribute value]
   (-> D
       (update :attributes dissoc attribute)
@@ -109,6 +113,7 @@
       (update :data (fn [data] (map #(dissoc % attribute) data)))))
 
 (defn i3
+  "Performs the i3 method recursively on D"
   [^Arff D]
   (cond
     (same-class? D) (same-class? D)
