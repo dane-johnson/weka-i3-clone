@@ -12,7 +12,7 @@
 (defn create-attribute
   "Creates an attribute from a string"
   [line]
-  [(second (re-seq #"\w+" line))
+  [(second (re-seq #"[\w-]+" line))
    (->> (re-find #"\{(.*)\}" line)
         second
         (re-seq #"[^\s,]+")
@@ -72,11 +72,13 @@
 
 (defn djoverd*infodj
   [^Arff D attribute value]
-  (* (reduce + (map #(nlgn (/ (dj D % attribute value)
-                              (d D attribute value))) (:test-values D)))
-     (/ (d D attribute value)
-        (count (:data D)))
-     -1))
+  (if-not (zero? (d D attribute value))
+    (* (reduce + (map #(nlgn (/ (dj D % attribute value)
+                                (d D attribute value))) (:test-values D)))
+       (/ (d D attribute value)
+          (count (:data D)))
+       -1)
+    0))
 
 (defn info-given
   "Calculates information requirement for a given attribute"
@@ -110,7 +112,22 @@
   (cond
     (same-class? D) (same-class? D)
     :default (let [[best-attribute best-values] (best-identifier D)]
-               (map #(i3 (partition-on-value D best-attribute %)) best-values))))
+               (map #(vector best-attribute
+                             %
+                             (i3 (partition-on-value D best-attribute %))) best-values))))
+(defn pprint-i3
+  "Pretty-prints i3 output"
+  ([i3-out] (pprint-i3 i3-out 0))
+  ([i3-out level]
+   (doseq [[attribute value rule] i3-out]
+     (dotimes [n level]
+       (print "|\t"))
+     (print (str attribute " = " value))
+     (if (string? rule)
+       (println (str ": " rule))
+       (do
+         (println)
+         (pprint-i3 rule (inc level)))))))
 
 (defn -main
   "Reads an arff file into an arff object"
