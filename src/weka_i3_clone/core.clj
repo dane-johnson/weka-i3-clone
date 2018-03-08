@@ -32,7 +32,8 @@
             (second (peek attributes))
             (->> (re-find #"@data\r?\n((.*\r?\n)+)" stream)
                  second
-                 (re-seq #"([^%\s]*)\r?\n")
+                 (re-seq #"(.*)\r?\n")
+                 (filter #(not= (ffirst %) \%))
                  (map second)
                  (map #(create-data attributes %))))))
 (defn nlgn
